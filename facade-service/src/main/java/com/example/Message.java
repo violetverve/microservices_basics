@@ -10,4 +10,12 @@ public class Message {
         this.id = id;
         this.txt = text;
     }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "id=" + id +
+                ", txt='" + txt + '\'' +
+                '}';
+    }
 }
