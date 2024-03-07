@@ -15,30 +15,19 @@
 	<name>microservices_basics</name>
 	<description>Demo project for Spring Boot</description>
 	<modules>
-		<module>facade-service</module>
-		<module>logging-service</module>
-		<module>messages-service</module>
+		<module>distributed-map</module>
+		<module>distributed-map-locks</module>
+		<module>bounded-queue</module>
 	</modules>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<groupId>com.hazelcast</groupId>
+			<artifactId>hazelcast</artifactId>
+			<version>5.3.6</version>
 		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
 	</dependencies>
 
 	<build>
