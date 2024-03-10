@@ -16,17 +16,23 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LoggingController {
 
     Logger logger = LoggerFactory.getLogger(LoggingController.class);
-    private Map<UUID, String> messages = new ConcurrentHashMap<>();
+
+    private final LoggingService loggingService;
+
+    public LoggingController(LoggingService loggingService) {
+        this.loggingService = loggingService;
+    }
 
     @GetMapping("/log")
     public String getListOfLoggedMessages() {
+        Map<UUID, String> messages = loggingService.log();
         return messages.values().toString();
     }
 
     @PostMapping("/log")
-    public ResponseEntity<Void> logMessage(@RequestBody Message msg) {
+    public ResponseEntity<Void> log(@RequestBody Message msg) {
         logger.info(msg.toString());
-        messages.put(msg.id, msg.txt);
+        loggingService.addToLog(msg);
         return ResponseEntity.ok().build();
     }
 

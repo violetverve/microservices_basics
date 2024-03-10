@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.2.2</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>com.example</groupId>
 	<artifactId>microservices_basics</artifactId>
@@ -16,6 +16,8 @@
 	<description>Demo project for Spring Boot</description>
 	<modules>
 		<module>facade-service</module>
+		<module>logging-service</module>
+		<module>messages-service</module>
 		<module>logging-service</module>
 		<module>messages-service</module>
 	</modules>
@@ -37,6 +39,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.hazelcast</groupId>
+			<artifactId>hazelcast</artifactId>
+			<version>5.3.6</version>
 		</dependency>
 
 	</dependencies>
