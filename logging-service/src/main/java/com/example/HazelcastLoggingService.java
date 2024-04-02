@@ -11,8 +11,9 @@ import java.util.UUID;
 @Service
 @Primary
 public class HazelcastLoggingService implements LoggingService{
+    private static final String LOGGING_MAP = "logging_map";
     private final HazelcastInstance hzInstance = Hazelcast.newHazelcastInstance();
-    private final Map<UUID, String> messages = hzInstance.getMap("logging_map");
+    private final Map<UUID, String> messages = hzInstance.getMap(LOGGING_MAP);
 
     @Override
     public void addToLog(Message msg) {
