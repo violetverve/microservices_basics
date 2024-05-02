@@ -4,51 +4,52 @@ import com.hazelcast.collection.IQueue;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import org.springframework.http.MediaType;
 
-
 @Service
 public class FacadeService {
-    private static final String QUEUE_NAME = "messages-queue";
+
+    @Value("${queueName}")
+    private String queueName;
 
     Logger logger = LoggerFactory.getLogger(FacadeService.class);
-    private final List<WebClient> loggingWebClients;
-    private final List<WebClient> messagesWebClients;
-    private final IQueue<Message> messageQueue;
 
-    public FacadeService()  {
-        loggingWebClients = List.of(
-                WebClient.create("http://localhost:8082"),
-                WebClient.create("http://localhost:8083"),
-                WebClient.create("http://localhost:8084")
-        );
+    private IQueue<Message> messageQueue;
 
-        messagesWebClients = List.of(
-                WebClient.create("http://localhost:8085"),
-                WebClient.create("http://localhost:8086")
-        );
+    DiscoveryClient discoveryClient;
 
+    public FacadeService(DiscoveryClient discoveryClient) {
+        this.discoveryClient = discoveryClient;
+    }
+
+    @PostConstruct
+    public void init() {
         Config config = new Config();
         config.getSerializationConfig().getCompactSerializationConfig().addSerializer(new MessageCompactSerializer());
 
         HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
-        messageQueue = hazelcastInstance.getQueue(QUEUE_NAME);
-
+        messageQueue = hazelcastInstance.getQueue(queueName);
     }
+
 
     public Mono<Void> addMessage(PayloadText text) {
 
         var msg = new Message(UUID.randomUUID(), text.txt);
 
-        var loggingWebClient = getRandomLoggingClient();
+
+        var loggingWebClient = getRandomClient("logging-service");
 
         logger.info(loggingWebClient.toString());
 
@@ -73,18 +74,15 @@ public class FacadeService {
 
     public Mono<String> messages() {
 
-        var loggingWebClient = getRandomLoggingClient();
-        var logValuesMono = loggingWebClient.get()
+        Mono<String> logValuesMono = getRandomClient("logging-service").get()
                 .uri("/log")
                 .retrieve()
                 .bodyToMono(String.class);
 
-
-        WebClient messagesWebClient = getRandomMessagesWebClient();
-        var messageMono = messagesWebClient.get()
-                        .uri("/message")
-                        .retrieve()
-                        .bodyToMono(String.class);
+        Mono<String> messageMono = getRandomClient("messages-service").get()
+                .uri("/message")
+                .retrieve()
+                .bodyToMono(String.class);
 
         return logValuesMono.zipWith(messageMono,
                         (logValues, message) -> logValues + ": " + message)
@@ -92,15 +90,10 @@ public class FacadeService {
     }
 
 
-    private WebClient getRandomLoggingClient() {
-        Random random = new Random();
-        int randomIndex = random.nextInt(loggingWebClients.size());
-        return loggingWebClients.get(randomIndex);
+    WebClient getRandomClient(String serviceName) {
+        List<ServiceInstance> instances = discoveryClient.getInstances(serviceName);
+
+        return WebClient.create(instances.get(new Random().nextInt(instances.size())).getUri().toString());
     }
 
-    private WebClient getRandomMessagesWebClient() {
-        Random random = new Random();
-        int randomIndex = random.nextInt(messagesWebClients.size());
-        return messagesWebClients.get(randomIndex);
-    }
 }

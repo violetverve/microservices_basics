@@ -6,25 +6,31 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class MessagesService {
     private static final Logger logger = LoggerFactory.getLogger(MessagesService.class);
-    private static final String QUEUE_NAME = "messages-queue";
-    private final List<Message> messageList = new CopyOnWriteArrayList<>();
-    private final IQueue<Message> messageQueue;
 
-    public MessagesService() {
+    @Value("${queueName}")
+    private String queueName;
+
+    private final List<Message> messageList = new CopyOnWriteArrayList<>();
+    private IQueue<Message> messageQueue;
+
+    @PostConstruct
+    public void init() {
         Config config = new Config();
         config.getSerializationConfig().getCompactSerializationConfig().addSerializer(new MessageCompactSerializer());
 
         HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
-        messageQueue = hazelcastInstance.getQueue(QUEUE_NAME);
+        messageQueue = hazelcastInstance.getQueue(queueName);
     }
 
     @Scheduled(fixedDelay = 1000)

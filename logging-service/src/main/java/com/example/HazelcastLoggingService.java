@@ -2,6 +2,8 @@ package com.example;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -11,9 +13,17 @@ import java.util.UUID;
 @Service
 @Primary
 public class HazelcastLoggingService implements LoggingService{
-    private static final String LOGGING_MAP = "logging_map";
+
+    @Value("${loggingMapName}")
+    private String loggingMapName;
+
     private final HazelcastInstance hzInstance = Hazelcast.newHazelcastInstance();
-    private final Map<UUID, String> messages = hzInstance.getMap(LOGGING_MAP);
+    private Map<UUID, String> messages;
+
+    @PostConstruct
+    public void init() {
+        messages = hzInstance.getMap(loggingMapName);
+    }
 
     @Override
     public void addToLog(Message msg) {
